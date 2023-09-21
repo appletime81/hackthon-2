@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Email Scheduler</h4>
+                </div>
+                <div class="card-body">
+                    <form action="/send_email" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="send_type" class="form-label">發信類型:</label>
+                            <select class="form-select" name="send_type" id="send_type" onchange="toggleSendType()">
+                                <option value="specific_time">特定時間發信</option>
+                                <option value="recurring">週期性發信</option>
+                            </select>
+                        </div>
+
+                        <div id="specific_time_div">
+                            <div class="mb-3">
+                                <label for="schedule_time" class="form-label">發信時間:</label>
+                                <input type="datetime-local" class="form-control" name="schedule_time">
+                            </div>
+                        </div>
+
+                        <div id="recurring_div" style="display: none;">
+                            <div class="mb-3">
+                                <label for="recurring_period" class="form-label">發信週期:</label>
+                                <select class="form-select" name="recurring_period" id="recurring_period"
+                                        onchange="toggleRecurringType()">
+                                    <option value="daily">每天</option>
+                                    <option value="weekly">每週</option>
+                                    <option value="monthly">每月</option>
+                                </select>
+                            </div>
+                            <div class="mb-3" id="daily_div">
+                                <label for="daily_time" class="form-label">發信時間:</label>
+                                <input type="time" class="form-control" name="daily_time">
+                            </div>
+                            <div class="mb-3" id="weekly_div" style="display: none;">
+                                <label for="weekly_day" class="form-label">星期:</label>
+                                <select class="form-select" name="weekly_day">
+                                    <option value="1">星期一</option>
+                                    <option value="2">星期二</option>
+                                    <option value="3">星期三</option>
+                                    <option value="4">星期四</option>
+                                    <option value="5">星期五</option>
+                                    <option value="6">星期六</option>
+                                    <option value="7">星期日</option>
+                                </select>
+                                <label for="weekly_time" class="form-label mt-2">發信時間:</label>
+                                <input type="time" class="form-control" name="weekly_time">
+                            </div>
+                            <div class="mb-3" id="monthly_div" style="display: none;">
+                                <label for="monthly_day" class="form-label">日期:</label>
+                                <input type="number" class="form-control" name="monthly_day" min="1" max="31">
+                                <label for="monthly_time" class="form-label mt-2">發信時間:</label>
+                                <input type="time" class="form-control" name="monthly_time">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="recipient" class="form-label">收件者:</label>
+                            <input type="email" class="form-control" name="recipient" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">主旨:</label>
+                            <input type="text" class="form-control" name="subject" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="content_type" class="form-label">信件內容格式:</label>
+                            <select class="form-select" name="content_type" id="content_type"
+                                    onchange="toggleContentType()">
+                                <option value="text">一般文字</option>
+                                <option value="html">HTML</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="content_textarea">
+                            <label for="content" class="form-label">信件內容:</label>
+                            <textarea class="form-control" name="content" rows="5" required></textarea>
+                        </div>
+
+                        <div class="mb-3" id="content_upload" style="display: none;">
+                            <label for="html_template" class="form-label">Email HTML Template:</label>
+                            <input type="file" class="form-control" name="html_template">
+                        </div>
+
+                        <button type="submit" class="btn btn-dark">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h3 class="text-center">發信紀錄</h3>
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                <tr>
+                    <th>發信時間</th>
+                    <th>收件者</th>
+                    <th>主旨</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for record in email_records %}
+                <tr>
+                    <td>{{ record.schedule_time }}</td>
+                    <td>{{ record.recipient }}</td>
+                    <td>{{ record.subject }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleContentType() {
+        const contentType = document.getElementById('content_type').value;
+        if (contentType === 'text') {
+            document.getElementById('content_textarea').style.display = 'block';
+            document.getElementById('content_upload').style.display = 'none';
+        } else {
+            document.getElementById('content_textarea').style.display = 'none';
+            document.getElementById('content_upload').style.display = 'block';
+        }
+    }
+
+    function toggleSendType() {
+        const sendType = document.getElementById('send_type').value;
+        if (sendType === 'specific_time') {
+            document.getElementById('specific_time_div').style.display = 'block';
+            document.getElementById('recurring_div').style.display = 'none';
+        } else {
+            document.getElementById('specific_time_div').style.display = 'none';
+            document.getElementById('recurring_div').style.display = 'block';
+            toggleRecurringType();
+        }
+    }
+
+    function toggleRecurringType() {
+        const recurringType = document.getElementById('recurring_period').value;
+        document.getElementById('daily_div').style.display = 'none';
+        document.getElementById('weekly_div').style.display = 'none';
+        document.getElementById('monthly_div').style.display = 'none';
+        if (recurringType === 'daily') {
+            document.getElementById('daily_div').style.display = 'block';
+        } else if (recurringType === 'weekly') {
+            document.getElementById('weekly_div').style.display = 'block';
+        } else if (recurringType === 'monthly') {
+            document.getElementById('monthly_div').style.display = 'block';
+        }
+    }
+</script>
+{% endblock %}
