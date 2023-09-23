@@ -70,6 +70,7 @@
                             <input type="text" class="form-control" name="subject" required>
                         </div>
 
+                        <!--
                         <div class="mb-3">
                             <label for="content_type" class="form-label">信件內容格式:</label>
                             <select class="form-select" name="content_type" id="content_type"
@@ -90,38 +91,60 @@
                         </div>
 
                         <button type="submit" class="btn btn-dark">Send</button>
+                        -->
+                        <div class="form-group">
+                            <label for="content_type" class="form-label">信件內容格式:</label>
+                            <select class="form-select" name="content_type" id="content_type"
+                                    onchange="toggleContentType()">
+                                <option value="text">一般文字</option>
+                                <option value="html">HTML</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="content_textarea">
+                            <label for="content" class="form-label">信件內容:</label>
+                            <textarea name="content" rows="5" class="form-control" required></textarea>
+                        </div>
+
+                        <div class="form-group" id="content_upload" style="display: none;">
+                            <label for="html_template" class="form-label">Email HTML Template:</label>
+                            <input type="file" class="form-control" name="html_template">
+                            <label for="excel_file" class="form-label mt-2">Excel檔案:</label>
+                            <input type="file" class="form-control" name="excel_file" accept=".xls,.xlsx">
+                        </div>
+
+                        <button type="button" class="btn btn-primary mt-3" onclick="sendForm()">Send</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row mt-5">
-        <div class="col-md-12">
-            <h3 class="text-center">發信紀錄</h3>
-            <table class="table table-hover table-bordered">
-                <thead class="table-dark">
-                <tr>
-                    <th>發信時間</th>
-                    <th>收件者</th>
-                    <th>主旨</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for record in email_records %}
-                <tr>
-                    <td>{{ record.schedule_time }}</td>
-                    <td>{{ record.recipient }}</td>
-                    <td>{{ record.subject }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
 </div>
 
 <script>
+    async function sendForm() {
+        const formData = new FormData(document.querySelector('form'));
+
+        try {
+            let response = await fetch('/send_email', {
+                method: 'POST',
+                body: formData
+            });
+
+            let result = await response.json();
+
+            if (result && result.status === "success") {
+                alert("提交成功!!!!");
+                window.location.href = "/home";
+            } else {
+                alert("Error sending the email.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("There was an error: " + error.message);
+        }
+    }
+
     function toggleContentType() {
         const contentType = document.getElementById('content_type').value;
         if (contentType === 'text') {
@@ -158,5 +181,11 @@
             document.getElementById('monthly_div').style.display = 'block';
         }
     }
+
+    // 初始化表單的顯示狀態
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleSendType();
+        toggleContentType();
+    });
 </script>
 {% endblock %}
